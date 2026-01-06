@@ -1,0 +1,104 @@
+/* DeadNetGuard - Blocked content overlay */
+
+.deadnetguard-blocked {
+  position: relative;
+  opacity: 0.3;
+  filter: blur(2px);
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.deadnetguard-blocked:hover {
+  opacity: 0.5;
+}
+
+.deadnetguard-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(153, 27, 27, 0.9) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: 12px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.deadnetguard-overlay-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  fill: white;
+}
+
+.deadnetguard-overlay-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.deadnetguard-overlay-subtext {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  margin-top: 4px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.deadnetguard-hidden {
+  display: none !important;
+}
+
+/* Quick block button that appears on hover */
+.deadnetguard-block-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.deadnetguard-block-btn:hover {
+  background: rgba(185, 28, 28, 1);
+}
+
+/* Show block button on video hover */
+ytd-rich-item-renderer:hover .deadnetguard-block-btn,
+ytd-video-renderer:hover .deadnetguard-block-btn,
+ytd-compact-video-renderer:hover .deadnetguard-block-btn,
+ytd-reel-item-renderer:hover .deadnetguard-block-btn {
+  opacity: 1;
+}
+
+/* Animation for newly blocked items */
+@keyframes deadnetguard-fadeout {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.deadnetguard-removing {
+  animation: deadnetguard-fadeout 0.3s ease forwards;
+}
