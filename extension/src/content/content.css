@@ -60,8 +60,8 @@
 .deadnetguard-block-btn {
   position: absolute;
   top: 8px;
-  right: 8px;
-  background: rgba(220, 38, 38, 0.9);
+  left: 8px;
+  background: rgba(220, 38, 38, 0.85);
   color: white;
   border: none;
   border-radius: 4px;
@@ -69,21 +69,16 @@
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  z-index: 999;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  z-index: 10;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, background 0.2s ease;
   font-family: system-ui, -apple-system, sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
 }
 
 .deadnetguard-block-btn:hover {
   background: rgba(185, 28, 28, 1);
-}
-
-/* Show block button on video hover */
-ytd-rich-item-renderer:hover .deadnetguard-block-btn,
-ytd-video-renderer:hover .deadnetguard-block-btn,
-ytd-compact-video-renderer:hover .deadnetguard-block-btn,
-ytd-reel-item-renderer:hover .deadnetguard-block-btn {
   opacity: 1;
 }
 
@@ -102,3 +97,60 @@ ytd-reel-item-renderer:hover .deadnetguard-block-btn {
 .deadnetguard-removing {
   animation: deadnetguard-fadeout 0.3s ease forwards;
 }
+
+/* ============================================
+   SHORTS STYLES
+   ============================================ */
+
+/* Shorts block button - styled like YouTube action buttons */
+.deadnetguard-shorts-block-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+}
+
+.deadnetguard-shorts-block-btn:hover {
+  background: rgba(220, 38, 38, 0.9);
+  transform: scale(1.1);
+}
+
+/* Toast notification for blocked Shorts */
+.deadnetguard-shorts-toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(220, 38, 38, 0.95);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: system-ui, -apple-system, sans-serif;
+  z-index: 99999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: deadnetguard-toast-in 0.3s ease;
+}
+
+@keyframes deadnetguard-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
