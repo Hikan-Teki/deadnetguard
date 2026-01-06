@@ -7,7 +7,28 @@
   <meta name="description" content="The internet is dying. AI slop is killing it. We're fighting back. DeadNetGuard blocks AI-generated garbage from your YouTube feed.">
   <link rel="icon" type="image/png" href="logo.png">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+    /* Bitroad Y2K Pixel Font */
+    @font-face {
+      font-family: 'Bitroad';
+      src: url('Bitroad-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Bitroad';
+      src: url('Bitroad-Italic.woff2') format('woff2');
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Bitroad Mono';
+      src: url('BitroadMono-RegularMono.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
 
     * {
       margin: 0;
@@ -31,11 +52,12 @@
     }
 
     body {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Bitroad', 'Space Grotesk', sans-serif;
       background: var(--black);
       color: var(--white);
-      line-height: 1.6;
+      line-height: 1.8;
       overflow-x: hidden;
+      font-size: 16px;
     }
 
     /* Glitch animation */
@@ -308,7 +330,7 @@
       font-size: 1.2rem;
       color: var(--gray);
       margin-bottom: 2rem;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Bitroad Mono', monospace;
     }
 
     .warning-box {
@@ -317,7 +339,7 @@
       padding: 1.5rem 2rem;
       max-width: 600px;
       margin: 2rem auto;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Bitroad Mono', monospace;
       font-size: 0.9rem;
       text-align: left;
     }
@@ -332,7 +354,7 @@
       padding: 2rem;
       text-align: center;
       border-top: 1px solid #222;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Bitroad Mono', monospace;
       font-size: 0.85rem;
       color: var(--gray);
     }
