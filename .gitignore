@@ -94,3 +94,7 @@ extension/.crxjs/
 *.bak
 *.backup
 *~
+
+# Project documentation (internal)
+CLAUDE.md
+console.txt
