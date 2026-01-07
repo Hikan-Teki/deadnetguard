@@ -295,16 +295,29 @@ function showShortsBlockedToast(channelName: string) {
  * Add block button to Shorts - positioned in the right action bar
  */
 function addShortsBlockButton(shortVideo: HTMLElement, _initialChannelName: string) {
-  if (shortVideo.querySelector('.deadnetguard-shorts-block-btn')) return
+  if (shortVideo.querySelector('.deadnetguard-shorts-btn')) return
 
   const btn = document.createElement('button')
-  btn.className = 'deadnetguard-shorts-block-btn'
-  btn.innerHTML = '🛡️'
-  btn.title = 'Block this channel'
+  // Use YouTube's native button classes for consistent styling
+  btn.className = 'yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-l yt-spec-button-shape-next--icon-button deadnetguard-shorts-btn'
+  btn.title = 'Report AI Slop'
+  btn.innerHTML = `
+    <div class="yt-spec-button-shape-next__icon" aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px;">
+      <span style="font-size: 20px; line-height: 1;">🚫</span>
+    </div>
+    <yt-touch-feedback-shape class="yt-spec-touch-feedback-shape yt-spec-touch-feedback-shape--touch-response">
+      <div class="yt-spec-touch-feedback-shape__stroke"></div>
+      <div class="yt-spec-touch-feedback-shape__fill"></div>
+    </yt-touch-feedback-shape>
+  `
 
   btn.addEventListener('click', async (e) => {
     e.preventDefault()
     e.stopPropagation()
+
+    // Pop animation
+    btn.classList.add('dng-clicked')
+    setTimeout(() => btn.classList.remove('dng-clicked'), 300)
 
     // Get CURRENT channel name (not the one from when button was created)
     const currentChannelName = getShortsChannelName(shortVideo)
