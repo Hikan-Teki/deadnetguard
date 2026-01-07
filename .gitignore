@@ -98,3 +98,6 @@ extension/.crxjs/
 # Project documentation (internal)
 CLAUDE.md
 console.txt
+
+# Website (hosted separately)
+website/
