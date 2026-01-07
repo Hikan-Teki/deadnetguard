@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src https://api.deadnetguard.com; img-src 'self' data:; font-src 'self';">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Admin Panel - DeadNetGuard</title>
   <link rel="icon" type="image/png" href="logo.png">
   <style>
@@ -371,7 +373,8 @@
 
   <script>
     const API_URL = 'https://api.deadnetguard.com';
-    let authToken = localStorage.getItem('dng_admin_token');
+    // Use sessionStorage instead of localStorage (cleared on tab close, more secure)
+    let authToken = sessionStorage.getItem('dng_admin_token');
     let currentFilter = 'pending';
 
     // Check if logged in
@@ -405,7 +408,7 @@
 
         if (res.ok) {
           authToken = data.token;
-          localStorage.setItem('dng_admin_token', authToken);
+          sessionStorage.setItem('dng_admin_token', authToken);
           showAdminPanel();
         } else {
           errorEl.textContent = data.error || 'Login failed';
@@ -417,7 +420,7 @@
 
     // Logout
     function logout() {
-      localStorage.removeItem('dng_admin_token');
+      sessionStorage.removeItem('dng_admin_token');
       authToken = null;
       document.getElementById('loginScreen').classList.remove('hidden');
       document.getElementById('adminPanel').classList.remove('visible');

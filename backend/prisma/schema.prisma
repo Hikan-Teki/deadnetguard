@@ -44,6 +44,16 @@ model Vote {
 model Admin {
   id        String   @id @default(cuid())
   username  String   @unique
-  password  String   // Hashed
+  password  String   // Hashed with bcrypt
   createdAt DateTime @default(now())
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  username  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
 }
