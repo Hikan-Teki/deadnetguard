@@ -198,8 +198,9 @@ function getShortsChannelName(shortVideo: HTMLElement): string | null {
       if (text.startsWith('@')) {
         text = text.substring(1)
       }
-      // Skip common non-channel text
-      if (!text.match(/^\d+[KMB]?$/) && !text.includes('Subscribe') && !text.includes('Abone')) {
+      // Skip common non-channel text (multi-language support)
+      const skipWords = ['Subscribe', 'Abone', 'Abonnieren', 'S\'abonner', 'Suscribirse', '登録']
+      if (!text.match(/^\d+[KMB]?$/) && !skipWords.some(w => text!.includes(w))) {
         return text
       }
     }
@@ -233,11 +234,15 @@ function blockShort(_shortVideo: HTMLElement, channelName: string) {
  * Skip to next Short using various methods
  */
 function skipToNextShort() {
-  // Method 1: Click YouTube's down/next navigation button
+  // Method 1: Click YouTube's down/next navigation button (multi-language)
   const navButtons = [
     document.querySelector('#navigation-button-down button'),
     document.querySelector('[aria-label*="Next"]'),
-    document.querySelector('[aria-label*="Sonraki"]'),
+    document.querySelector('[aria-label*="Sonraki"]'), // Turkish
+    document.querySelector('[aria-label*="Siguiente"]'), // Spanish
+    document.querySelector('[aria-label*="Suivant"]'), // French
+    document.querySelector('[aria-label*="Weiter"]'), // German
+    document.querySelector('[aria-label*="次"]'), // Japanese
     document.querySelector('ytd-shorts [id*="down"] button'),
   ]
 
@@ -432,8 +437,9 @@ function getChannelName(card: HTMLElement): string | null {
     const el = card.querySelector(selector)
     const text = el?.textContent?.trim()
     if (text && text.length > 0 && text.length < 100) {
-      // Skip if it looks like a video title or view count
-      if (!text.includes('görüntüleme') && !text.includes('views') && !text.match(/^\d+:\d+$/)) {
+      // Skip if it looks like a video title or view count (multi-language)
+      const viewWords = ['views', 'görüntüleme', 'vistas', 'vues', 'Aufrufe', '回視聴']
+      if (!viewWords.some(w => text.includes(w)) && !text.match(/^\d+:\d+$/)) {
         return text
       }
     }

@@ -102,7 +102,7 @@ function App() {
   }
 
   async function clearAllBlocked() {
-    if (!confirm('TÜM LOKAL BLOCKLIST SİLİNECEK. EMİN MİSİN?')) return
+    if (!confirm('Are you sure? This will clear your entire personal blocklist.')) return
     setPersonalBlocklist([])
     await chrome.storage.local.set({ personalBlocklist: [] })
 
