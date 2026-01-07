@@ -662,21 +662,24 @@
           fetch(`${API_URL}/api/stats`)
         ]);
 
-        const banlist = await banlistRes.json();
+        const banlistData = await banlistRes.json();
         const stats = await statsRes.json();
 
+        // Extract channels array from response
+        const channels = banlistData.channels || [];
+
         // Update stats
-        totalBanned.textContent = banlist.length || '0';
+        totalBanned.textContent = channels.length || '0';
         totalReports.textContent = stats.totalReports || '0';
         totalVotes.textContent = stats.totalVotes || '0';
 
         // Render banlist
-        if (banlist.length === 0) {
+        if (channels.length === 0) {
           grid.innerHTML = '<div class="banlist-empty">No channels banned yet. Be the first to report AI slop!</div>';
           return;
         }
 
-        grid.innerHTML = banlist.map(channel => `
+        grid.innerHTML = channels.map(channel => `
           <div class="banlist-item">
             <span class="icon">🚫</span>
             <span class="name" title="${escapeHtml(channel.name)}">${escapeHtml(channel.name)}</span>
