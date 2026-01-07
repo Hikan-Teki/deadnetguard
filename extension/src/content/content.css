@@ -10,6 +10,15 @@
   --dng-white: #fafafa;
 }
 
+/* Disable YouTube's touch feedback overlay so our button stays visible */
+yt-touch-feedback-shape,
+.yt-spec-touch-feedback-shape,
+.yt-spec-touch-feedback-shape__hover-effect,
+.yt-spec-touch-feedback-shape__stroke,
+.yt-spec-touch-feedback-shape__fill {
+  pointer-events: none !important;
+}
+
 /* Blocked video card */
 .deadnetguard-blocked {
   position: relative;
@@ -107,40 +116,48 @@
   display: none !important;
 }
 
-/* Quick block button - KILL button */
+/* Quick block button - next to channel name */
 .deadnetguard-block-btn {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: var(--dng-black);
-  color: var(--dng-red);
-  border: 1px solid var(--dng-red);
-  border-radius: 2px;
-  padding: 6px 10px;
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  z-index: 10;
-  opacity: 0;
-  transition: all 0.2s ease;
-  font-family: 'Share Tech Mono', monospace;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  pointer-events: auto;
+  display: inline-flex !important;
+  align-items: center !important;
+  background: rgba(220, 38, 38, 0.9) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 3px !important;
+  padding: 2px 6px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  opacity: 0.7 !important;
+  visibility: visible !important;
+  margin-right: 6px !important;
+  font-family: 'Arial', sans-serif !important;
+  vertical-align: middle !important;
+  line-height: 1.4 !important;
+  transition: all 0.2s ease !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
 }
 
-/* Show on hover */
-*:hover > .deadnetguard-block-btn,
-.deadnetguard-block-btn:hover {
-  opacity: 1;
+.deadnetguard-block-btn::after {
+  content: '' !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  transition: max-width 0.25s ease !important;
 }
 
 .deadnetguard-block-btn:hover {
-  background: var(--dng-red);
-  color: var(--dng-white);
-  box-shadow: 0 0 15px var(--dng-red-glow);
-  transform: scale(1.05);
+  background: #dc2626 !important;
+  opacity: 1 !important;
+  padding: 3px 8px !important;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.5) !important;
+}
+
+.deadnetguard-block-btn:hover::after {
+  content: ' SLOP' !important;
+  max-width: 50px !important;
 }
 
 /* Animation for newly blocked items */

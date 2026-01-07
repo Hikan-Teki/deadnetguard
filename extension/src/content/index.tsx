@@ -494,8 +494,9 @@ function addBlockButton(card: HTMLElement, channelName: string) {
 
   const btn = document.createElement('button')
   btn.className = 'deadnetguard-block-btn'
-  btn.textContent = '🛡️ Block'
-  btn.title = `Block ${channelName}`
+  btn.textContent = '🚫'
+  btn.title = `Report AI Slop: ${channelName}`
+  btn.setAttribute('data-dng-channel', channelName)
 
   btn.addEventListener('click', async (e) => {
     e.preventDefault()
@@ -538,30 +539,28 @@ function addBlockButton(card: HTMLElement, channelName: string) {
     })
   })
 
-  // Try multiple selectors to find the thumbnail container
-  const thumbnailSelectors = [
-    'ytd-thumbnail',
-    '#thumbnail',
-    'a#thumbnail',
-    '.ytd-thumbnail',
-    'yt-thumbnail-view-model',
-    '[class*="thumbnail"]',
+  // Insert button BEFORE channel name element (like youtube-channel-blocker does)
+  const channelSelectors = [
+    'a.yt-core-attributed-string__link[href^="/@"]', // New YouTube layout
+    '#channel-name a',
+    'ytd-channel-name a',
+    '#channel-name',
+    'ytd-channel-name',
   ]
 
-  let thumbnailContainer: HTMLElement | null = null
-  for (const selector of thumbnailSelectors) {
+  let channelNameElem: HTMLElement | null = null
+  for (const selector of channelSelectors) {
     const el = card.querySelector(selector) as HTMLElement
     if (el) {
-      thumbnailContainer = el
+      channelNameElem = el
       break
     }
   }
 
-  if (thumbnailContainer) {
-    thumbnailContainer.style.position = 'relative'
-    thumbnailContainer.appendChild(btn)
+  if (channelNameElem && channelNameElem.parentElement) {
+    channelNameElem.parentElement.insertBefore(btn, channelNameElem)
   } else {
-    // Fallback: add to card itself
+    // Fallback: add to card
     card.style.position = 'relative'
     card.appendChild(btn)
   }
