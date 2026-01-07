@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Channel {
+  id          String   @id @default(cuid())
+  youtubeId   String   @unique
+  name        String
+  reportCount Int      @default(1)
+  score       Int      @default(0) // upvotes - downvotes
+  isBanned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reports     Report[]
+  votes       Vote[]
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId    String?
+  reason    String?
+  evidence  String?  // URL to video or screenshot
+  createdAt DateTime @default(now())
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  visitorId String   // Anonymous visitor ID (fingerprint)
+  value     Int      // 1 (upvote = AI slop) or -1 (downvote = not AI slop)
+  createdAt DateTime @default(now())
+
+  @@unique([channelId, visitorId])
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // Hashed
+  createdAt DateTime @default(now())
+}

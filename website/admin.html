@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - DeadNetGuard</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <style>
+    @font-face {
+      font-family: 'Bitroad';
+      src: url('Bitroad-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Bitroad Mono';
+      src: url('BitroadMono-RegularMono.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --black: #0a0a0a;
+      --darker: #111111;
+      --dark: #1a1a1a;
+      --red: #dc2626;
+      --red-bright: #ef4444;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --white: #fafafa;
+      --gray: #888888;
+    }
+
+    body {
+      font-family: 'Bitroad', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+    }
+
+    /* Login Screen */
+    .login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .login-screen.hidden { display: none; }
+
+    .login-box {
+      background: var(--darker);
+      border: 1px solid #333;
+      padding: 2rem;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .login-box h1 {
+      color: var(--red);
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--dark);
+      border: 1px solid #333;
+      color: var(--white);
+      font-family: 'Bitroad Mono', monospace;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--red);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      cursor: pointer;
+      font-family: 'Bitroad', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--red-bright);
+    }
+
+    .btn-small {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+    }
+
+    .btn-green { background: var(--green); }
+    .btn-green:hover { background: #16a34a; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--red);
+    }
+
+    .error-msg {
+      color: var(--red);
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* Admin Panel */
+    .admin-panel {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .admin-panel.visible { display: block; }
+
+    .admin-header {
+      background: var(--darker);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #333;
+    }
+
+    .admin-header h1 {
+      color: var(--red);
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .admin-content {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--darker);
+      padding: 1.5rem;
+      border: 1px solid #333;
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      color: var(--red);
+      font-family: 'Bitroad Mono', monospace;
+    }
+
+    .stat-card .label {
+      color: var(--gray);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #333;
+      padding-bottom: 1rem;
+    }
+
+    .tab {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid #333;
+      color: var(--gray);
+      cursor: pointer;
+      font-family: 'Bitroad', sans-serif;
+    }
+
+    .tab.active {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    /* Channel List */
+    .channel-list {
+      background: var(--darker);
+      border: 1px solid #333;
+    }
+
+    .channel-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid #222;
+    }
+
+    .channel-item:last-child {
+      border-bottom: none;
+    }
+
+    .channel-info {
+      flex: 1;
+    }
+
+    .channel-name {
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .channel-name a {
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .channel-name a:hover {
+      color: var(--red);
+    }
+
+    .channel-meta {
+      font-size: 0.8rem;
+      color: var(--gray);
+      font-family: 'Bitroad Mono', monospace;
+    }
+
+    .channel-meta span {
+      margin-right: 1rem;
+    }
+
+    .channel-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      border-radius: 2px;
+      margin-left: 0.5rem;
+    }
+
+    .badge-banned {
+      background: var(--red);
+      color: var(--white);
+    }
+
+    .badge-pending {
+      background: var(--yellow);
+      color: var(--black);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      background: var(--green);
+      color: var(--white);
+      border-radius: 4px;
+      display: none;
+    }
+
+    .toast.error {
+      background: var(--red);
+    }
+
+    .toast.visible {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <h1>// Admin Login</h1>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="username" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" required>
+        </div>
+        <button type="submit" class="btn">Login</button>
+        <p class="error-msg" id="loginError"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div class="admin-panel" id="adminPanel">
+    <header class="admin-header">
+      <h1>DeadNetGuard Admin</h1>
+      <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
+    </header>
+
+    <div class="admin-content">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="value" id="statBanned">0</div>
+          <div class="label">Banned Channels</div>
+        </div>
+        <div class="stat-card">
+          <div class="value" id="statPending">0</div>
+          <div class="label">Pending Review</div>
+        </div>
+        <div class="stat-card">
+          <div class="value" id="statReports">0</div>
+          <div class="label">Total Reports</div>
+        </div>
+        <div class="stat-card">
+          <div class="value" id="statVotes">0</div>
+          <div class="label">Total Votes</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-filter="pending" onclick="setFilter('pending')">Pending</button>
+        <button class="tab" data-filter="banned" onclick="setFilter('banned')">Banned</button>
+        <button class="tab" data-filter="all" onclick="setFilter('all')">All</button>
+      </div>
+
+      <!-- Channel List -->
+      <div class="channel-list" id="channelList">
+        <div class="empty-state">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API_URL = 'https://api.deadnetguard.com';
+    let authToken = localStorage.getItem('dng_admin_token');
+    let currentFilter = 'pending';
+
+    // Check if logged in
+    async function checkAuth() {
+      if (!authToken) return false;
+      try {
+        const res = await fetch(`${API_URL}/api/admin/verify`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    }
+
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const errorEl = document.getElementById('loginError');
+
+      try {
+        const res = await fetch(`${API_URL}/api/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          authToken = data.token;
+          localStorage.setItem('dng_admin_token', authToken);
+          showAdminPanel();
+        } else {
+          errorEl.textContent = data.error || 'Login failed';
+        }
+      } catch (err) {
+        errorEl.textContent = 'Connection error';
+      }
+    });
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('dng_admin_token');
+      authToken = null;
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('adminPanel').classList.remove('visible');
+    }
+
+    // Show admin panel
+    async function showAdminPanel() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('adminPanel').classList.add('visible');
+      await loadStats();
+      await loadChannels();
+    }
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_URL}/api/stats`);
+        const data = await res.json();
+        document.getElementById('statBanned').textContent = data.bannedChannels;
+        document.getElementById('statPending').textContent = data.pendingChannels;
+        document.getElementById('statReports').textContent = data.totalReports;
+        document.getElementById('statVotes').textContent = data.totalVotes;
+      } catch (err) {
+        console.error('Failed to load stats:', err);
+      }
+    }
+
+    // Load channels
+    async function loadChannels() {
+      const listEl = document.getElementById('channelList');
+      listEl.innerHTML = '<div class="empty-state">Loading...</div>';
+
+      try {
+        const res = await fetch(`${API_URL}/api/admin/channels?filter=${currentFilter}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+
+        if (data.channels.length === 0) {
+          listEl.innerHTML = '<div class="empty-state">No channels found</div>';
+          return;
+        }
+
+        listEl.innerHTML = data.channels.map(ch => `
+          <div class="channel-item">
+            <div class="channel-info">
+              <div class="channel-name">
+                <a href="https://youtube.com/channel/${ch.youtubeId}" target="_blank">${escapeHtml(ch.name)}</a>
+                ${ch.isBanned ? '<span class="badge badge-banned">BANNED</span>' : '<span class="badge badge-pending">PENDING</span>'}
+              </div>
+              <div class="channel-meta">
+                <span>Reports: ${ch.reportCount}</span>
+                <span>Score: ${ch.score}</span>
+                <span>Votes: ${ch.votes}</span>
+              </div>
+            </div>
+            <div class="channel-actions">
+              ${ch.isBanned
+                ? `<button class="btn btn-small btn-outline" onclick="unbanChannel('${ch.id}')">Unban</button>`
+                : `<button class="btn btn-small btn-green" onclick="banChannel('${ch.id}')">Ban</button>`
+              }
+              <button class="btn btn-small btn-outline" onclick="deleteChannel('${ch.id}')">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        listEl.innerHTML = '<div class="empty-state">Failed to load channels</div>';
+      }
+    }
+
+    // Set filter
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab[data-filter="${filter}"]`).classList.add('active');
+      loadChannels();
+    }
+
+    // Ban channel
+    async function banChannel(id) {
+      try {
+        await fetch(`${API_URL}/api/admin/ban/${id}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        showToast('Channel banned');
+        loadStats();
+        loadChannels();
+      } catch (err) {
+        showToast('Failed to ban channel', true);
+      }
+    }
+
+    // Unban channel
+    async function unbanChannel(id) {
+      try {
+        await fetch(`${API_URL}/api/admin/unban/${id}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        showToast('Channel unbanned');
+        loadStats();
+        loadChannels();
+      } catch (err) {
+        showToast('Failed to unban channel', true);
+      }
+    }
+
+    // Delete channel
+    async function deleteChannel(id) {
+      if (!confirm('Are you sure you want to delete this channel?')) return;
+      try {
+        await fetch(`${API_URL}/api/admin/channel/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        showToast('Channel deleted');
+        loadStats();
+        loadChannels();
+      } catch (err) {
+        showToast('Failed to delete channel', true);
+      }
+    }
+
+    // Show toast
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.toggle('error', isError);
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 3000);
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Init
+    (async () => {
+      if (await checkAuth()) {
+        showAdminPanel();
+      }
+    })();
+  </script>
+</body>
+</html>

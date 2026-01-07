@@ -15,13 +15,17 @@ const DEFAULT_STATS: Stats = {
   lastBlockedChannel: null,
 }
 
+type Tab = 'stats' | 'blocklist' | 'settings'
+
 function App() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [stats, setStats] = useState<Stats>(DEFAULT_STATS)
-  const [blocklistCount, setBlocklistCount] = useState(0)
+  const [personalBlocklist, setPersonalBlocklist] = useState<BannedChannel[]>([])
+  const [communityBlocklist, setCommunityBlocklist] = useState<BannedChannel[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<Tab>('stats')
+  const [syncing, setSyncing] = useState(false)
 
-  // Load data on mount
   useEffect(() => {
     loadData()
   }, [])
@@ -42,10 +46,8 @@ function App() {
 
       setSettings(result.settings ?? DEFAULT_SETTINGS)
       setStats(result.stats ?? DEFAULT_STATS)
-
-      const personal = result.personalBlocklist ?? []
-      const community = result.communityBlocklist ?? []
-      setBlocklistCount(personal.length + community.length)
+      setPersonalBlocklist(result.personalBlocklist ?? [])
+      setCommunityBlocklist(result.communityBlocklist ?? [])
     } catch (error) {
       console.error('Failed to load data:', error)
     } finally {
@@ -60,7 +62,6 @@ function App() {
     setSettings(newSettings)
     await chrome.storage.local.set({ settings: newSettings })
 
-    // Notify content scripts
     const tabs = await chrome.tabs.query({ url: '*://www.youtube.com/*' })
     tabs.forEach((tab) => {
       if (tab.id) {
@@ -72,132 +73,224 @@ function App() {
     })
   }
 
-  async function toggleOverlay() {
-    const newSettings = { ...settings, showOverlay: !settings.showOverlay }
-    setSettings(newSettings)
-    await chrome.storage.local.set({ settings: newSettings })
+  async function removeFromBlocklist(channelId: string) {
+    const updated = personalBlocklist.filter(c => c.youtubeId !== channelId)
+    setPersonalBlocklist(updated)
+    await chrome.storage.local.set({ personalBlocklist: updated })
+
+    // Notify content scripts
+    const tabs = await chrome.tabs.query({ url: '*://www.youtube.com/*' })
+    tabs.forEach((tab) => {
+      if (tab.id) {
+        chrome.tabs.sendMessage(tab.id, { type: 'REFRESH_BLOCKLIST' })
+      }
+    })
+  }
+
+  async function syncCommunityList() {
+    setSyncing(true)
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'SYNC_COMMUNITY_LIST' })
+      if (response.success) {
+        await loadData()
+      }
+    } catch (error) {
+      console.error('Sync failed:', error)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  async function clearAllBlocked() {
+    if (!confirm('TÜM LOKAL BLOCKLIST SİLİNECEK. EMİN MİSİN?')) return
+    setPersonalBlocklist([])
+    await chrome.storage.local.set({ personalBlocklist: [] })
+
+    const tabs = await chrome.tabs.query({ url: '*://www.youtube.com/*' })
+    tabs.forEach((tab) => {
+      if (tab.id) {
+        chrome.tabs.sendMessage(tab.id, { type: 'REFRESH_BLOCKLIST' })
+      }
+    })
   }
 
   if (isLoading) {
     return (
-      <div className="w-80 p-4 bg-gray-900 text-white flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
+      <div className="dng-popup">
+        <div className="dng-loading">
+          <span className="dng-glitch">LOADING...</span>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="w-80 bg-gray-900 text-white">
+    <div className="dng-popup">
       {/* Header */}
-      <div className="p-4 border-b border-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
-              <svg
-                className="w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 24 24"
+      <header className="dng-header">
+        <div className="dng-logo">
+          <img src="/icons/icon48.png" alt="DNG" />
+          <div className="dng-title">
+            <h1>DEAD<span>NET</span>GUARD</h1>
+            <p>// AI SLOP DESTROYER</p>
+          </div>
+        </div>
+        <button
+          className={`dng-power ${settings.enabled ? 'active' : ''}`}
+          onClick={toggleExtension}
+          title={settings.enabled ? 'DEACTIVATE' : 'ACTIVATE'}
+        >
+          {settings.enabled ? 'ON' : 'OFF'}
+        </button>
+      </header>
+
+      {/* Kill Count */}
+      <div className="dng-killcount">
+        <div className="dng-stat main">
+          <span className="value">{stats.blockedToday}</span>
+          <span className="label">KILLED TODAY</span>
+        </div>
+        <div className="dng-stat">
+          <span className="value">{stats.blockedTotal}</span>
+          <span className="label">TOTAL KILLS</span>
+        </div>
+        <div className="dng-stat">
+          <span className="value">{personalBlocklist.length + communityBlocklist.length}</span>
+          <span className="label">TARGETS</span>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <nav className="dng-tabs">
+        <button
+          className={activeTab === 'stats' ? 'active' : ''}
+          onClick={() => setActiveTab('stats')}
+        >
+          STATUS
+        </button>
+        <button
+          className={activeTab === 'blocklist' ? 'active' : ''}
+          onClick={() => setActiveTab('blocklist')}
+        >
+          BLOCKLIST
+        </button>
+        <button
+          className={activeTab === 'settings' ? 'active' : ''}
+          onClick={() => setActiveTab('settings')}
+        >
+          CONFIG
+        </button>
+      </nav>
+
+      {/* Content */}
+      <div className="dng-content">
+        {activeTab === 'stats' && (
+          <div className="dng-stats-tab">
+            {stats.lastBlockedChannel && (
+              <div className="dng-last-kill">
+                <span className="label">&gt; LAST KILL:</span>
+                <span className="channel">{stats.lastBlockedChannel}</span>
+              </div>
+            )}
+            <div className="dng-mission">
+              <p>THE DEAD INTERNET IS REAL.</p>
+              <p>AI SLOP IS POLLUTION.</p>
+              <p className="highlight">WE ARE THE CLEANUP CREW.</p>
+            </div>
+            <button className="dng-btn sync" onClick={syncCommunityList} disabled={syncing}>
+              {syncing ? 'SYNCING...' : 'SYNC COMMUNITY LIST'}
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'blocklist' && (
+          <div className="dng-blocklist-tab">
+            <div className="dng-blocklist-header">
+              <span>YOUR KILLS ({personalBlocklist.length})</span>
+              {personalBlocklist.length > 0 && (
+                <button className="dng-clear" onClick={clearAllBlocked}>CLEAR ALL</button>
+              )}
+            </div>
+            <div className="dng-blocklist">
+              {personalBlocklist.length === 0 ? (
+                <div className="dng-empty">
+                  <p>NO PERSONAL KILLS YET</p>
+                  <p className="sub">Go to YouTube and start blocking AI slop</p>
+                </div>
+              ) : (
+                personalBlocklist.map((channel) => (
+                  <div key={channel.youtubeId} className="dng-channel">
+                    <span className="name">{channel.name}</span>
+                    <button
+                      className="remove"
+                      onClick={() => removeFromBlocklist(channel.youtubeId)}
+                      title="Unblock"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="dng-community-count">
+              <span>+ {communityBlocklist.length} COMMUNITY TARGETS</span>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="dng-settings-tab">
+            <div className="dng-setting">
+              <div className="info">
+                <span className="name">OVERLAY MODE</span>
+                <span className="desc">Show "BLOCKED" overlay vs hide completely</span>
+              </div>
+              <button
+                className={`toggle ${settings.showOverlay ? 'on' : ''}`}
+                onClick={async () => {
+                  const newSettings = { ...settings, showOverlay: !settings.showOverlay }
+                  setSettings(newSettings)
+                  await chrome.storage.local.set({ settings: newSettings })
+                }}
               >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h2v2h-2zm0-4V7h2v6h-2z" />
-              </svg>
+                {settings.showOverlay ? 'ON' : 'OFF'}
+              </button>
             </div>
-            <div>
-              <h1 className="font-bold text-lg">DeadNetGuard</h1>
-              <p className="text-xs text-gray-400">AI Slop Blocker</p>
-            </div>
-          </div>
-
-          {/* Power toggle */}
-          <button
-            onClick={toggleExtension}
-            className={`w-12 h-6 rounded-full transition-colors ${
-              settings.enabled ? 'bg-green-500' : 'bg-gray-600'
-            }`}
-          >
-            <div
-              className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                settings.enabled ? 'translate-x-6' : 'translate-x-0.5'
-              }`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="p-4 grid grid-cols-3 gap-3 border-b border-gray-700">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-red-400">
-            {stats.blockedToday}
-          </div>
-          <div className="text-xs text-gray-400">Blocked Today</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-orange-400">
-            {stats.blockedTotal}
-          </div>
-          <div className="text-xs text-gray-400">Total Blocked</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-blue-400">
-            {blocklistCount}
-          </div>
-          <div className="text-xs text-gray-400">In Blocklist</div>
-        </div>
-      </div>
-
-      {/* Last blocked */}
-      {stats.lastBlockedChannel && (
-        <div className="px-4 py-3 border-b border-gray-700 bg-gray-800/50">
-          <div className="text-xs text-gray-400 mb-1">Last blocked:</div>
-          <div className="text-sm font-medium truncate">
-            {stats.lastBlockedChannel}
-          </div>
-        </div>
-      )}
-
-      {/* Settings */}
-      <div className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-medium">Show overlay</div>
-            <div className="text-xs text-gray-400">
-              Show "Blocked" vs completely hide
+            <div className="dng-setting">
+              <div className="info">
+                <span className="name">AUTO-SYNC</span>
+                <span className="desc">Sync community blocklist hourly</span>
+              </div>
+              <button
+                className={`toggle ${settings.syncEnabled ? 'on' : ''}`}
+                onClick={async () => {
+                  const newSettings = { ...settings, syncEnabled: !settings.syncEnabled }
+                  setSettings(newSettings)
+                  await chrome.storage.local.set({ settings: newSettings })
+                }}
+              >
+                {settings.syncEnabled ? 'ON' : 'OFF'}
+              </button>
             </div>
           </div>
-          <button
-            onClick={toggleOverlay}
-            className={`w-10 h-5 rounded-full transition-colors ${
-              settings.showOverlay ? 'bg-blue-500' : 'bg-gray-600'
-            }`}
-          >
-            <div
-              className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                settings.showOverlay ? 'translate-x-5' : 'translate-x-0.5'
-              }`}
-            />
-          </button>
-        </div>
+        )}
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-700 bg-gray-800/30">
-        <div className="flex items-center justify-between text-xs text-gray-400">
-          <span>v1.0.0</span>
-          <a
-            href="https://github.com/deadnetguard"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white transition-colors"
-          >
-            GitHub
-          </a>
-        </div>
-      </div>
+      <footer className="dng-footer">
+        <span>v1.0.0</span>
+        <a href="https://deadnetguard.com" target="_blank" rel="noopener noreferrer">
+          deadnetguard.com
+        </a>
+        <a href="https://github.com/Hikan-Teki/deadnetguard" target="_blank" rel="noopener noreferrer">
+          GitHub
+        </a>
+      </footer>
 
-      {/* Status indicator */}
-      <div
-        className={`h-1 ${settings.enabled ? 'bg-green-500' : 'bg-gray-600'}`}
-      />
+      {/* Status bar */}
+      <div className={`dng-status-bar ${settings.enabled ? 'active' : 'inactive'}`}>
+        {settings.enabled ? '// PROTECTION ACTIVE' : '// PROTECTION DISABLED'}
+      </div>
     </div>
   )
 }

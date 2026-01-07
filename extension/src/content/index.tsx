@@ -313,9 +313,11 @@ function addShortsBlockButton(shortVideo: HTMLElement, _initialChannelName: stri
       return
     }
 
+    const youtubeId = currentChannelName.toLowerCase().replace(/\s+/g, '')
+
     const channel: BannedChannel = {
       id: crypto.randomUUID(),
-      youtubeId: currentChannelName.toLowerCase().replace(/\s+/g, ''),
+      youtubeId,
       name: currentChannelName,
       reportCount: 1,
       addedAt: Date.now(),
@@ -330,6 +332,13 @@ function addShortsBlockButton(shortVideo: HTMLElement, _initialChannelName: stri
 
     blockedChannels.add(currentChannelName.toLowerCase())
     blockShort(shortVideo, currentChannelName)
+
+    // Also report to API for community blocklist
+    chrome.runtime.sendMessage({
+      type: 'REPORT_CHANNEL',
+      youtubeId,
+      channelName: currentChannelName
+    })
   })
 
   // Find the right-side action buttons (like, dislike, comment, share)
@@ -492,10 +501,12 @@ function addBlockButton(card: HTMLElement, channelName: string) {
     e.preventDefault()
     e.stopPropagation()
 
+    const youtubeId = channelName.toLowerCase().replace(/\s+/g, '')
+
     // Add to personal blocklist
     const channel: BannedChannel = {
       id: crypto.randomUUID(),
-      youtubeId: channelName.toLowerCase().replace(/\s+/g, ''),
+      youtubeId,
       name: channelName,
       reportCount: 1,
       addedAt: Date.now(),
@@ -518,6 +529,13 @@ function addBlockButton(card: HTMLElement, channelName: string) {
       blockVideoCard(card, channelName)
       card.classList.remove('deadnetguard-removing')
     }, 300)
+
+    // Also report to API for community blocklist
+    chrome.runtime.sendMessage({
+      type: 'REPORT_CHANNEL',
+      youtubeId,
+      channelName
+    })
   })
 
   // Try multiple selectors to find the thumbnail container

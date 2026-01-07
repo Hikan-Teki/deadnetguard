@@ -5,8 +5,11 @@
 
 import type { BannedChannel, Stats, Settings } from '@/types'
 
-// API configuration (will be used when backend is ready)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.deadnetguard.com'
+// API configuration
+const API_BASE_URL = 'https://api.deadnetguard.com'
+
+// Sync interval (1 hour in minutes for chrome.alarms)
+const SYNC_INTERVAL_MINUTES = 60
 
 // Default values
 const DEFAULT_SETTINGS: Settings = {
@@ -33,15 +36,25 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await chrome.storage.local.set({
       settings: DEFAULT_SETTINGS,
       personalBlocklist: [],
-      communityBlocklist: getInitialBanList(),
+      communityBlocklist: [],
       stats: DEFAULT_STATS,
     })
 
     console.log('[DeadNetGuard] Default settings initialized')
+
+    // Fetch community blocklist on install
+    await fetchCommunityBlocklist()
   }
 
-  // Reset daily stats at midnight
+  // Setup alarms for daily reset and periodic sync
   setupDailyReset()
+  setupPeriodicSync()
+})
+
+// Also run sync on startup
+chrome.runtime.onStartup.addListener(async () => {
+  console.log('[DeadNetGuard] Extension startup')
+  await fetchCommunityBlocklist()
 })
 
 /**
@@ -94,6 +107,23 @@ async function handleMessage(
       case 'SYNC_COMMUNITY_LIST':
         const list = await fetchCommunityBlocklist()
         sendResponse({ success: true, count: list.length })
+        break
+
+      case 'REPORT_CHANNEL':
+        const reportResult = await reportChannelToAPI(
+          message.youtubeId as string,
+          message.channelName as string
+        )
+        sendResponse(reportResult)
+        break
+
+      case 'GET_BLOCKLIST':
+        const blocklistResult = await chrome.storage.local.get(['personalBlocklist', 'communityBlocklist'])
+        sendResponse({
+          success: true,
+          personal: blocklistResult.personalBlocklist || [],
+          community: blocklistResult.communityBlocklist || []
+        })
         break
 
       default:
@@ -222,22 +252,46 @@ function setupDailyReset() {
 }
 
 /**
- * Initial ban list - known AI slop channels
- * This will be replaced by community-sourced data from API
+ * Report channel to API
  */
-function getInitialBanList(): BannedChannel[] {
-  // Placeholder - these would come from your research
-  // Start with a small seed list
-  return [
-    // Add known AI slop channels here during development
-    // {
-    //   id: '1',
-    //   youtubeId: 'example-channel-id',
-    //   name: 'Example AI Channel',
-    //   reportCount: 100,
-    //   addedAt: Date.now(),
-    // },
-  ]
+async function reportChannelToAPI(youtubeId: string, channelName: string): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        youtubeId,
+        channelName
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to report channel')
+    }
+
+    const data = await response.json()
+    console.log('[DeadNetGuard] Channel reported:', data)
+
+    return { success: true, message: data.message }
+  } catch (error) {
+    console.error('[DeadNetGuard] Failed to report channel:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+/**
+ * Setup periodic sync of community blocklist
+ */
+function setupPeriodicSync() {
+  // Sync every hour
+  chrome.alarms.create('syncCommunityList', { periodInMinutes: SYNC_INTERVAL_MINUTES })
+
+  chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === 'syncCommunityList') {
+      console.log('[DeadNetGuard] Periodic sync triggered')
+      await fetchCommunityBlocklist()
+    }
+  })
 }
 
 console.log('[DeadNetGuard] Background service worker loaded')

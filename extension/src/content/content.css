@@ -1,85 +1,146 @@
-/* DeadNetGuard - Blocked content overlay */
+/* DeadNetGuard - Radical Content Styles */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700&display=swap');
 
+/* CSS Variables */
+:root {
+  --dng-red: #dc2626;
+  --dng-red-dark: #991b1b;
+  --dng-red-glow: rgba(220, 38, 38, 0.6);
+  --dng-black: #0a0a0a;
+  --dng-white: #fafafa;
+}
+
+/* Blocked video card */
 .deadnetguard-blocked {
   position: relative;
-  opacity: 0.3;
-  filter: blur(2px);
+  opacity: 0.2;
+  filter: grayscale(100%) blur(3px);
   pointer-events: none;
   transition: all 0.3s ease;
 }
 
 .deadnetguard-blocked:hover {
-  opacity: 0.5;
+  opacity: 0.4;
+  filter: grayscale(100%) blur(2px);
 }
 
+/* Overlay - Radical Style */
 .deadnetguard-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(153, 27, 27, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%);
+  border: 2px solid var(--dng-red);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  border-radius: 12px;
+  border-radius: 8px;
   pointer-events: auto;
   cursor: pointer;
+  overflow: hidden;
+}
+
+/* Scanline effect */
+.deadnetguard-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(220, 38, 38, 0.03) 2px,
+    rgba(220, 38, 38, 0.03) 4px
+  );
+  pointer-events: none;
+  animation: dng-scanline 8s linear infinite;
+}
+
+@keyframes dng-scanline {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
 }
 
 .deadnetguard-overlay-icon {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   margin-bottom: 8px;
-  fill: white;
+  fill: var(--dng-red);
+  filter: drop-shadow(0 0 10px var(--dng-red-glow));
 }
 
 .deadnetguard-overlay-text {
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
+  color: var(--dng-red);
+  font-size: 12px;
+  font-weight: 700;
   text-align: center;
   padding: 0 12px;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: dng-glitch 0.5s ease-in-out infinite;
+}
+
+@keyframes dng-glitch {
+  0%, 100% { text-shadow: -1px 0 var(--dng-red), 1px 0 cyan; }
+  25% { text-shadow: 1px 0 var(--dng-red), -1px 0 cyan; }
+  50% { text-shadow: -1px 0 var(--dng-red), 1px 0 cyan; }
+  75% { text-shadow: 1px 0 var(--dng-red), -1px 0 cyan; }
 }
 
 .deadnetguard-overlay-subtext {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 11px;
-  margin-top: 4px;
-  font-family: system-ui, -apple-system, sans-serif;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  margin-top: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
 }
 
 .deadnetguard-hidden {
   display: none !important;
 }
 
-/* Quick block button that appears on hover */
+/* Quick block button - KILL button */
 .deadnetguard-block-btn {
   position: absolute;
   top: 8px;
   left: 8px;
-  background: rgba(220, 38, 38, 0.85);
-  color: white;
-  border: none;
-  border-radius: 4px;
+  background: var(--dng-black);
+  color: var(--dng-red);
+  border: 1px solid var(--dng-red);
+  border-radius: 2px;
   padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   cursor: pointer;
   z-index: 10;
-  opacity: 0.9;
-  transition: opacity 0.2s ease, background 0.2s ease;
-  font-family: system-ui, -apple-system, sans-serif;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: all 0.2s ease;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
 }
 
+/* Show on hover */
+*:hover > .deadnetguard-block-btn,
 .deadnetguard-block-btn:hover {
-  background: rgba(185, 28, 28, 1);
   opacity: 1;
+}
+
+.deadnetguard-block-btn:hover {
+  background: var(--dng-red);
+  color: var(--dng-white);
+  box-shadow: 0 0 15px var(--dng-red-glow);
+  transform: scale(1.05);
 }
 
 /* Animation for newly blocked items */
@@ -87,70 +148,89 @@
   from {
     opacity: 1;
     transform: scale(1);
+    filter: none;
   }
   to {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.9);
+    filter: blur(10px) grayscale(100%);
   }
 }
 
 .deadnetguard-removing {
-  animation: deadnetguard-fadeout 0.3s ease forwards;
+  animation: deadnetguard-fadeout 0.4s ease forwards;
 }
 
 /* ============================================
-   SHORTS STYLES
+   SHORTS STYLES - RADICAL
    ============================================ */
 
-/* Shorts block button - styled like YouTube action buttons */
+/* Shorts block button - skull style */
 .deadnetguard-shorts-block-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 48px;
   height: 48px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: none;
+  background: var(--dng-black);
+  color: var(--dng-red);
+  border: 2px solid var(--dng-red);
   border-radius: 50%;
-  font-size: 20px;
+  font-size: 22px;
   cursor: pointer;
   z-index: 100;
   transition: all 0.2s ease;
   margin-bottom: 16px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
 
 .deadnetguard-shorts-block-btn:hover {
-  background: rgba(220, 38, 38, 0.9);
-  transform: scale(1.1);
+  background: var(--dng-red);
+  color: var(--dng-white);
+  box-shadow: 0 0 20px var(--dng-red-glow);
+  transform: scale(1.15);
+  border-color: var(--dng-white);
 }
 
-/* Toast notification for blocked Shorts */
+/* Toast notification - Aggressive */
 .deadnetguard-shorts-toast {
   position: fixed;
   top: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(220, 38, 38, 0.95);
-  color: white;
+  background: var(--dng-black);
+  color: var(--dng-red);
+  border: 2px solid var(--dng-red);
   padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: system-ui, -apple-system, sans-serif;
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   z-index: 99999;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  animation: deadnetguard-toast-in 0.3s ease;
+  box-shadow: 0 0 30px var(--dng-red-glow), 0 4px 20px rgba(0, 0, 0, 0.5);
+  animation: dng-toast-in 0.3s ease;
 }
 
-@keyframes deadnetguard-toast-in {
+.deadnetguard-shorts-toast::before {
+  content: '// ';
+  opacity: 0.5;
+}
+
+@keyframes dng-toast-in {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
+    transform: translateX(-50%) translateY(-20px) scale(0.9);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 }
 
+/* Pulse animation for active protection */
+@keyframes dng-pulse {
+  0%, 100% { box-shadow: 0 0 10px var(--dng-red-glow); }
+  50% { box-shadow: 0 0 25px var(--dng-red-glow); }
+}
